@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux x86_64
+          - os: ubuntu-24.04-arm
+            name: Linux ARM64
+          - os: macos-13
+            name: macOS x86_64
+          - os: macos-14
+            name: macOS ARM64
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.name }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Check flake
+        run: nix flake check
+
+      - name: Build dpm package
+        run: nix build .#dpm
+
+      - name: Verify dpm binary
+        run: |
+          echo "=== dpm version ==="
+          ./result/bin/dpm version
+
+          echo "=== dpm --help ==="
+          ./result/bin/dpm --help | head -30
+
+      - name: Test devShell
+        run: |
+          nix develop --command dpm version

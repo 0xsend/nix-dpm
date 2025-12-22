@@ -1,0 +1,135 @@
+name: Update dpm
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Specific version to update to (leave empty for latest)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    outputs:
+      updated: ${{ steps.update.outputs.updated }}
+      version: ${{ steps.update.outputs.version }}
+      previous_version: ${{ steps.update.outputs.previous_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for dpm updates
+        id: update
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            ./scripts/update-version.sh "${{ inputs.version }}"
+          else
+            ./scripts/update-version.sh
+          fi
+
+      - name: Upload updated sources
+        if: steps.update.outputs.updated == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dpm-sources
+          path: dpm-sources.json
+
+  verify-build:
+    needs: check-update
+    if: needs.check-update.outputs.updated == 'true'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux x86_64
+          - os: ubuntu-24.04-arm
+            name: Linux ARM64
+          - os: macos-13
+            name: macOS x86_64
+          - os: macos-14
+            name: macOS ARM64
+    runs-on: ${{ matrix.os }}
+    name: Verify (${{ matrix.name }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download updated sources
+        uses: actions/download-artifact@v4
+        with:
+          name: dpm-sources
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build dpm package
+        run: nix build .#dpm
+
+      - name: Verify dpm binary works
+        run: |
+          echo "=== Checking dpm version ==="
+          ./result/bin/dpm version
+
+          echo "=== Checking dpm help ==="
+          ./result/bin/dpm --help | head -20
+
+      - name: Verify version matches expected
+        env:
+          EXPECTED_VERSION: ${{ needs.check-update.outputs.version }}
+        run: |
+          # Extract the active version from dpm output
+          REPORTED_VERSION=$(./result/bin/dpm version --active 2>/dev/null || ./result/bin/dpm version | grep '^\*' | awk '{print $2}')
+          echo "Expected: ${EXPECTED_VERSION}"
+          echo "Reported: ${REPORTED_VERSION}"
+
+          if [[ "${REPORTED_VERSION}" != "${EXPECTED_VERSION}" ]]; then
+            echo "ERROR: Version mismatch! Binary reports ${REPORTED_VERSION} but expected ${EXPECTED_VERSION}"
+            exit 1
+          fi
+          echo "Version verification passed"
+
+  commit-update:
+    needs: [check-update, verify-build]
+    if: needs.check-update.outputs.updated == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download updated sources
+        uses: actions/download-artifact@v4
+        with:
+          name: dpm-sources
+
+      - name: Commit and push update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add dpm-sources.json
+          git commit -m "chore: update dpm to ${{ needs.check-update.outputs.version }}
+
+          Updates dpm from ${{ needs.check-update.outputs.previous_version }} to ${{ needs.check-update.outputs.version }}.
+
+          Verification:
+          - Built successfully on Linux x86_64, Linux ARM64, macOS x86_64, macOS ARM64
+          - Binary version matches expected version
+          - dpm --help executes successfully
+
+          Automated update by update-dpm workflow."
+
+          git push
