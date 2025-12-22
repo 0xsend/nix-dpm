@@ -23,7 +23,7 @@ Add this flake to your `flake.nix` inputs:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix-dpm.url = "github:your-org/nix-dpm";  # Update with actual repo
+    nix-dpm.url = "github:0xsend/nix-dpm";  # Update with actual repo
   };
 
   outputs = { self, nixpkgs, nix-dpm, ... }:
@@ -48,7 +48,7 @@ Add this flake to your `flake.nix` inputs:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix-dpm.url = "github:your-org/nix-dpm";  # Update with actual repo
+    nix-dpm.url = "github:0xsend/nix-dpm";  # Update with actual repo
   };
 
   outputs = { self, nixpkgs, nix-dpm, ... }:
@@ -67,14 +67,14 @@ Add this flake to your `flake.nix` inputs:
 ### Run directly with nix run
 
 ```bash
-nix run github:your-org/nix-dpm -- build
-nix run github:your-org/nix-dpm -- test
+nix run github:0xsend/nix-dpm -- build
+nix run github:0xsend/nix-dpm -- test
 ```
 
 ### Enter a shell with dpm
 
 ```bash
-nix develop github:your-org/nix-dpm
+nix develop github:0xsend/nix-dpm
 ```
 
 ## Supported Platforms
