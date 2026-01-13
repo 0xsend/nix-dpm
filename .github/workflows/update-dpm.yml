@@ -90,8 +90,8 @@ jobs:
         env:
           EXPECTED_VERSION: ${{ needs.check-update.outputs.version }}
         run: |
-          # Extract the active version from dpm output
-          REPORTED_VERSION=$(./result/bin/dpm version --active 2>/dev/null || ./result/bin/dpm version | grep '^\*' | awk '{print $2}')
+          # Extract the dpm tool version
+          REPORTED_VERSION=$(./result/bin/dpm --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
           echo "Expected: ${EXPECTED_VERSION}"
           echo "Reported: ${REPORTED_VERSION}"
 
