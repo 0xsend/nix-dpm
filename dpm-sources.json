@@ -1,9 +1,9 @@
 {
-  "version": "3.4.9",
+  "version": "3.4.10",
   "hashes": {
-    "darwin-arm64": "sha256:57fb55a12e761458426944e86d32e5e5b4415bd3284d0bc4c532a8c3b42f8224",
-    "darwin-amd64": "sha256:074f0c0ecc5f4860a87e8f15efd106063f19851e364ecf74f2a0d59e664cd55c",
-    "linux-amd64": "sha256:a5d69404c4fc0e1f66024434d14cb5e56f626bea860e327cdd688de2724d995f",
-    "linux-arm64": "sha256:6d80df34cedabfa7a3569bd6ef2df39bac307d3078601c1c355abccc4fee92dc"
+    "darwin-arm64": "sha256:f2a8f8ea49418a9db8ebf9310c2db8e16706b24859df7c8731257dc19b64c4b9",
+    "darwin-amd64": "sha256:e86f279cc0a07eb5cead4eb8f0877f1815aefd190ef95533664843b7a381f5fe",
+    "linux-amd64": "sha256:ba77dd9a8f6bda2c62b0c6b2d5a1e3f9d953779175bb9097053887d06d6b7853",
+    "linux-arm64": "sha256:880c84c2b883e96ad0178ff0ca25a867b00448e48758c085994db6fab2e2d3c1"
   }
 }
