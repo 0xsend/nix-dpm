@@ -70,7 +70,9 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
 
+      # Upstream regression: magic-nix-cache crashes on macOS ARM64 runners.
       - name: Setup Nix cache
+        if: runner.os != 'macOS'
         uses: DeterminateSystems/magic-nix-cache-action@main
         with:
           use-flakehub: false
